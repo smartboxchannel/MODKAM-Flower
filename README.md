@@ -4,7 +4,7 @@
 
 Поблагодарить авторов: 
 
-Thank the authors: 
+Thank the authors: https://t.me/Zigbeer_bot
 
 Телеграм чат Вокруг да около Zigbee - https://t.me/zigbeer
 
