@@ -2,9 +2,7 @@
 
 ![MODKAM Flower](https://raw.githubusercontent.com/smartboxchannel/MODKAM-Flower/refs/heads/main/IMAGES/MODKAM_Flower6.jpg) 
 
-Поблагодарить авторов: 
-
-Thank the authors: https://t.me/Zigbeer_bot
+Поблагодарить авторов: https://t.me/Zigbeer_bot
 
 Телеграм чат Вокруг да около Zigbee - https://t.me/zigbeer
 
