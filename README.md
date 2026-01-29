@@ -4,6 +4,4 @@
 
 Поблагодарить авторов: https://t.me/Zigbeer_bot
 
-Телеграм чат Вокруг да около Zigbee - https://t.me/zigbeer
-
 Телеграм чат DIY Devices - https://t.me/diy_devices
