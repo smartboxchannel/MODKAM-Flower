@@ -145,10 +145,10 @@ python –-version
 
 #
 
-### How to flash the device
+### Как прошить устройство
 
-Download the Smart RF Flash Programmer V1 https://www.ti.com/tool/FLASH-PROGRAMMER
+Скачайте Smart RF Flash Programmer V1 https://www.ti.com/tool/FLASH-PROGRAMMER
 
-Open the application select the HEX firmware file
+Откройте приложение, выберите HEX-файл прошивки
 
-Connect the device with wires to CCDebugger, first erase the chip, then flash it.
+Подключите устройство проводами к CCDebugger, сначала сотрите данные с чипа, затем прошейте его.
