@@ -1,5 +1,9 @@
 # MODKAM Flower
 
+## Проект датчика влажности почвы
+
+(основан на исходном коде проекта DIYRUZ Flower - https://github.com/diyruz/flower)
+
 ![MODKAM Flower](https://raw.githubusercontent.com/smartboxchannel/MODKAM-Flower/refs/heads/main/IMAGES/MODKAM_Flower6.jpg) 
 
 Поблагодарить авторов: https://yoomoney.ru/fundraise/P2XLTgJsB6k.231012
