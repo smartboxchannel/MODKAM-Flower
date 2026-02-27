@@ -147,3 +147,13 @@ python –-version
 Выполняем Rebuild All.
 
 ![MODKAM Flower](https://raw.githubusercontent.com/smartboxchannel/MODKAM-Flower/refs/heads/main/IMAGES/13.png) 
+
+#
+
+### How to flash the device
+
+Download the Smart RF Flash Programmer V1 https://www.ti.com/tool/FLASH-PROGRAMMER
+
+Open the application select the HEX firmware file
+
+Connect the device with wires to CCDebugger, first erase the chip, then flash it.
