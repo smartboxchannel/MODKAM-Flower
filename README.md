@@ -37,21 +37,35 @@ Thank the authors: https://yoomoney.ru/fundraise/P2XLTgJsB6k.231012
 
 python –-version
 
+![MODKAM Flower](https://raw.githubusercontent.com/smartboxchannel/MODKAM-Flower/refs/heads/main/IMAGES/6.png) 
+
 Если все хорошо, то покажет текущую установленную версию python, как на примере:
+
+![MODKAM Flower](https://raw.githubusercontent.com/smartboxchannel/MODKAM-Flower/refs/heads/main/IMAGES/7.png) 
 
 Если же нет, то [идем устанавливать python](https://www.python.org/)
 
+![MODKAM Flower](https://raw.githubusercontent.com/smartboxchannel/MODKAM-Flower/refs/heads/main/IMAGES/8.png) 
+
 Устанавливаем его. Обязательно необходимо проставить галочку "add python **** to path"
+
+![MODKAM Flower](https://raw.githubusercontent.com/smartboxchannel/MODKAM-Flower/refs/heads/main/IMAGES/9.png) 
 
 Устанавливаем прошивку [Z-Stack 3.0.2](https://www.ti.com/tool/Z-STACK) — это SDK для разработки прошивок.
 
-Устанавливаем, можно немного уменьшить путь до zstack: C:\Z-Stack 3.0.2. Здесь вопросов быть не должно.
+![MODKAM Flower](https://raw.githubusercontent.com/smartboxchannel/MODKAM-Flower/refs/heads/main/IMAGES/10.png) 
+
+Устанавливаем, можно немного уменьшить путь до zstack: C:\Z-Stack 3.0.2. 
+
+![MODKAM Flower](https://raw.githubusercontent.com/smartboxchannel/MODKAM-Flower/refs/heads/main/IMAGES/11.png) 
 
 Скачиваем исходный код из репозитория
 
 Добавляем папку с файлами проекта в zstack: C:\Z-Stack 3.0.2\Projects\zstack\HomeAutomation
 
 Теперь можно запускать IAR Embedded Workbench. Открываем проект пунктом меню Open workspace
+
+
 
 Находим нашу папку со скаченным проектом, далее в папке CC2530DB находим файл проекта
 
