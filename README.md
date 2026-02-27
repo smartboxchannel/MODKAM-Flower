@@ -15,14 +15,23 @@ Thank the authors: https://yoomoney.ru/fundraise/P2XLTgJsB6k.231012
 
 В качестве среды разработки будет использоваться IAR Embedded Workbench, где цифра 8051 это архитектура чипа, а не версия системы, как можно подумать. Для начала необходимо ее [скачать по ссылке](https://www.iar.com/iar-embedded-workbench#!?architecture=8051)
 
+![MODKAM Flower](https://raw.githubusercontent.com/smartboxchannel/MODKAM-Flower/refs/heads/main/IMAGES/1.png) 
 
 Запускаем, необходимо выбрать пункт "Install IAR Embedded Workbench® for 8051"
 
+![MODKAM Flower](https://raw.githubusercontent.com/smartboxchannel/MODKAM-Flower/refs/heads/main/IMAGES/2.png) 
+
 При установке iar надо выбрать режим custom:
+
+![MODKAM Flower](https://raw.githubusercontent.com/smartboxchannel/MODKAM-Flower/refs/heads/main/IMAGES/3.png) 
 
 и убрать галочку с установки Dongle drivers
 
+![MODKAM Flower](https://raw.githubusercontent.com/smartboxchannel/MODKAM-Flower/refs/heads/main/IMAGES/4.png) 
+
 При попытки запуска проекта может быть такая ошибка:
+
+![MODKAM Flower](https://raw.githubusercontent.com/smartboxchannel/MODKAM-Flower/refs/heads/main/IMAGES/5.png) 
 
 Поэтому перед запуском проекта необходимо убедиться что python установлен. Проверить это можно в командной строке:
 
