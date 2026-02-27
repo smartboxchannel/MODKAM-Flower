@@ -1,6 +1,6 @@
 # MODKAM Flower
 
-## Проект датчика влажности почвы
+## открытый проект датчика влажности почвы MODKAM Flower v4
 
 (основан на исходном коде проекта DIYRUZ Flower - https://github.com/diyruz/flower)
 
