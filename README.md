@@ -6,6 +6,10 @@
 
 ![MODKAM Flower](https://raw.githubusercontent.com/smartboxchannel/MODKAM-Flower/refs/heads/main/IMAGES/MODKAM_Flower6.jpg) 
 
+Датчик, работающий на базе SoC CC2530, основан на емкостном методе измерения(у датчика нет электрического контакта с почвой). Питание датчика осуществляется от батареек CR 2032 и AAA.
+
+Печатная плата четырехслойная, с медным сенсором во внутреннем слое. Это решение обеспечивает долговечность. Медный сенсор со временем не коррозирует от проникающей влаги через микротрещины в маске, которые появляются со временем.
+
 Поблагодарить авторов: https://yoomoney.ru/fundraise/P2XLTgJsB6k.231012
 
 Thank the authors: https://yoomoney.ru/fundraise/P2XLTgJsB6k.231012
