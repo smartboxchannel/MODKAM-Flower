@@ -39,6 +39,7 @@ Thank the authors: https://yoomoney.ru/fundraise/P2XLTgJsB6k.231012
 
 Продажа DIY Устройств - https://t.me/diydevmart
 
+#
 
 ### Установка среды разработки
 
