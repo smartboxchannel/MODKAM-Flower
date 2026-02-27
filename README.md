@@ -57,16 +57,18 @@ python –-version
 
 Устанавливаем, можно немного уменьшить путь до zstack: C:\Z-Stack 3.0.2. 
 
-![MODKAM Flower](https://raw.githubusercontent.com/smartboxchannel/MODKAM-Flower/refs/heads/main/IMAGES/11.png) 
-
 Скачиваем исходный код из репозитория
 
 Добавляем папку с файлами проекта в zstack: C:\Z-Stack 3.0.2\Projects\zstack\HomeAutomation
 
 Теперь можно запускать IAR Embedded Workbench. Открываем проект пунктом меню Open workspace
 
-
+![MODKAM Flower](https://raw.githubusercontent.com/smartboxchannel/MODKAM-Flower/refs/heads/main/IMAGES/11.png) 
 
 Находим нашу папку со скаченным проектом, далее в папке CC2530DB находим файл проекта
 
+![MODKAM Flower](https://raw.githubusercontent.com/smartboxchannel/MODKAM-Flower/refs/heads/main/IMAGES/12.png) 
+
 Выполняем Rebuild All.
+
+![MODKAM Flower](https://raw.githubusercontent.com/smartboxchannel/MODKAM-Flower/refs/heads/main/IMAGES/13.png) 
