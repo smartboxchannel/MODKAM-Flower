@@ -1,49 +1,37 @@
 #ifndef HAL_BOARD_CFG_H
 #define HAL_BOARD_CFG_H
 
-
-/* ------------------------------------------------------------------------------------------------
+/*******************************************************************************************************
  *                                           Includes
- * ------------------------------------------------------------------------------------------------
- */
+ *******************************************************************************************************/
 
 #include "hal_mcu.h"
 #include "hal_defs.h"
 #include "hal_types.h"
 
-
-
-
-
-
-
-/* ------------------------------------------------------------------------------------------------
+/*******************************************************************************************************
  *                                          Clock Speed
- * ------------------------------------------------------------------------------------------------
- */
+ *******************************************************************************************************/
 
 #define HAL_CPU_CLOCK_MHZ     32
 
 /* 32 kHz clock source select in CLKCONCMD */
 #if !defined (OSC32K_CRYSTAL_INSTALLED) || (defined (OSC32K_CRYSTAL_INSTALLED) && (OSC32K_CRYSTAL_INSTALLED == TRUE))
-#define OSC_32KHZ  0x00 /* external 32 KHz xosc */
+#define OSC_32KHZ  0x00 /* external 32 KHz crystal oscillator */
 #else
-#define OSC_32KHZ  0x80 /* internal 32 KHz rcosc */
+#define OSC_32KHZ  0x80 /* internal 32 KHz RC oscillator */
 #endif
 
 #define HAL_CLOCK_STABLE() 
 
-/* ------------------------------------------------------------------------------------------------
+/*******************************************************************************************************
  *                                         Key Release detect support
- * ------------------------------------------------------------------------------------------------
- */
+ *******************************************************************************************************/
 #define HAL_KEY_CODE_NOKEY 0xff
 
-
-/* ------------------------------------------------------------------------------------------------
+/*******************************************************************************************************
  *                                       LED Configuration
- * ------------------------------------------------------------------------------------------------
- */
+ *******************************************************************************************************/
 
 // TODO: review all HAL_BOARD_CC2530EB_REV17 and replace with HAL_BOARD_CC2530RC
 //       if applicable.
@@ -53,10 +41,9 @@
 #define ACTIVE_LOW        !
 #define ACTIVE_HIGH       !!    /* double negation forces result to be '1' */
 
-/* ------------------------------------------------------------------------------------------------
+/*******************************************************************************************************
  *                         OSAL NV implemented by internal flash pages.
- * ------------------------------------------------------------------------------------------------
- */
+ *******************************************************************************************************/
 
 // Flash is partitioned into 8 banks of 32 KB or 16 pages.
 #define HAL_FLASH_PAGE_PER_BANK    16
@@ -98,20 +85,18 @@
 #define HAL_NV_DMA_GET_DESC()      HAL_DMA_GET_DESC0()
 #define HAL_NV_DMA_SET_ADDR(a)     HAL_DMA_SET_ADDR_DESC0((a))
 
-/* ------------------------------------------------------------------------------------------------
+/*******************************************************************************************************
  *  Serial Boot Loader: reserving the first 4 pages of flash and other memory in cc2530-sb.xcl.
- * ------------------------------------------------------------------------------------------------
- */
+ *******************************************************************************************************/
 
 #define HAL_SB_IMG_ADDR       0x2000
 #define HAL_SB_CRC_ADDR       0x2090
 // Size of internal flash less 4 pages for boot loader, 6 pages for NV, & 1 page for lock bits.
 #define HAL_SB_IMG_SIZE      (0x40000 - 0x2000 - 0x3000 - 0x0800)
 
-/* ------------------------------------------------------------------------------------------------
+/*******************************************************************************************************
  *                                            Macros
- * ------------------------------------------------------------------------------------------------
- */
+ *******************************************************************************************************/
 
 /* ----------- RF-frontend Connection Initialization ---------- */
 #if defined HAL_PA_LNA_CC2592
@@ -121,11 +106,9 @@ extern void MAC_RfFrontendSetup(void);
 #define HAL_BOARD_RF_FRONTEND_SETUP()
 #endif
 
-
-/* ------------------------------------------------------------------------------------------------
+/*******************************************************************************************************
  *                                            Macros
- * ------------------------------------------------------------------------------------------------
- */
+ *******************************************************************************************************/
 
 #define CLKCONCMD_VALUE (CLKCONCMD_32MHZ | OSC_32KHZ)
 
@@ -142,7 +125,7 @@ extern void MAC_RfFrontendSetup(void);
   SLEEPCMD &= ~OSC_PD;                       /* turn on 16MHz RC and 32MHz XOSC */                \
   while (!(SLEEPSTA & XOSC_STB));            /* wait for 32MHz XOSC stable */                     \
   asm("NOP");                                /* chip bug workaround */                            \
-  for (i=0; i<504; i++) asm("NOP");          /* Require 63us delay for all revs */                \
+  for (i=0; i<504; i++) asm("NOP");          /* Require 63us delay for all revisions */           \
   CLKCONCMD = (CLKCONCMD_32MHZ | OSC_32KHZ); /* Select 32MHz XOSC and the source for 32K clock */ \
   while (CLKCONSTA != (CLKCONCMD_32MHZ | OSC_32KHZ)); /* Wait for the change to be effective */   \
   SLEEPCMD |= OSC_PD;                        /* turn off 16MHz RC */                              \
@@ -150,16 +133,15 @@ extern void MAC_RfFrontendSetup(void);
   /* Turn on cache prefetch mode */                              \
   PREFETCH_ENABLE();                                             \
                                                                  \
-  /* set direction for GPIO outputs  */                          \
+  /* Set direction for GPIO outputs */                           \
   /* For SE2431L PA LNA this sets ANT_SEL to output */           \
   /* For CC2592 this enables LNA */                              \
-  P1DIR |= BV(0);                                        \
+  P1DIR |= BV(0);                                                \
                                                                  \
   /* Set PA/LNA HGM control P0_7 */                              \
   P0DIR |= BV(7);                                                \
                                                                  \
-                                                                 \
-  /* setup RF frontend if necessary */                           \
+  /* Setup RF frontend if necessary */                           \
   HAL_BOARD_RF_FRONTEND_SETUP();                                 \
   HAL_TURN_OFF_LED1();                                           \
   LED1_DDR |= LED1_BV;                                           \
@@ -174,9 +156,9 @@ extern void MAC_RfFrontendSetup(void);
   SLEEPCMD &= ~OSC_PD;                       /* turn on 16MHz RC and 32MHz XOSC */                \
   while (!(SLEEPSTA & XOSC_STB));            /* wait for 32MHz XOSC stable */                     \
   asm("NOP");                                /* chip bug workaround */                            \
-  for (i=0; i<504; i++) asm("NOP");          /* Require 63us delay for all revs */                \
-  CLKCONCMD = CLKCONCMD_VALUE; /* Select 32MHz XOSC and the source for 32K clock */ \
-  while (CLKCONSTA != CLKCONCMD_VALUE); /* Wait for the change to be effective */   \
+  for (i=0; i<504; i++) asm("NOP");          /* Require 63us delay for all revisions */           \
+  CLKCONCMD = CLKCONCMD_VALUE; /* Select 32MHz XOSC and the source for 32K clock */              \
+  while (CLKCONSTA != CLKCONCMD_VALUE); /* Wait for the change to be effective */                 \
   SLEEPCMD |= OSC_PD;                        /* turn off 16MHz RC */                              \
                                                                  \
   /* Turn on cache prefetch mode */                              \
@@ -199,15 +181,14 @@ extern void MAC_RfFrontendSetup(void);
 #define HAL_PUSH_BUTTON5()        (0)
 #define HAL_PUSH_BUTTON6()        (0)
 
-/* ----------- LED's ---------- */
+/* ----------- LED Configuration ---------- */
 
-  #define LED1_BV           BV(1)
-  #define LED1_SBIT         P0_1
-  #define LED1_DDR          P0DIR
-  #define LED1_POLARITY     ACTIVE_HIGH
+#define LED1_BV           BV(1)
+#define LED1_SBIT         P0_1
+#define LED1_DDR          P0DIR
+#define LED1_POLARITY     ACTIVE_HIGH
 
-
-//power pin
+// Power pin LED
 #define LED4_BV           BV(1)
 #define LED4_SBIT         P1_1
 #define LED4_DDR          P1DIR
@@ -244,10 +225,9 @@ extern void MAC_RfFrontendSetup(void);
 #define VDD_MIN_GOOD (VDD_2_0+8)  // 10% margin over minimum to survive a page erase and compaction.
 #define VDD_MIN_XNV  (VDD_2_7+5)  // 5% margin over minimum to survive a page erase and compaction.
 
-/* ------------------------------------------------------------------------------------------------
+/*******************************************************************************************************
  *                                     Driver Configuration
- * ------------------------------------------------------------------------------------------------
- */
+ *******************************************************************************************************/
 
 /* Set to TRUE enable H/W TIMER usage, FALSE disable it */
 #ifndef HAL_TIMER
@@ -289,10 +269,6 @@ extern void MAC_RfFrontendSetup(void);
 #endif
 #if (!defined BLINK_LEDS) && (HAL_LED == TRUE)
 #define BLINK_LEDS
-#endif
-
-#ifndef HAL_MOTION
-#define HAL_MOTION FASLE
 #endif
 
 /* Set to TRUE enable KEY usage, FALSE disable it */
@@ -351,6 +327,4 @@ extern void MAC_RfFrontendSetup(void);
 #define HAL_BUZZER TRUE
 #endif
 
-/*******************************************************************************************************
-*/
-#endif
+#endif /* HAL_BOARD_CFG_H */
