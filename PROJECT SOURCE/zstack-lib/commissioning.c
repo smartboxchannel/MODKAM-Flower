@@ -1,3 +1,7 @@
+/*********************************************************************
+ * INCLUDES
+ *********************************************************************/
+
 #include "commissioning.h"
 #include "OSAL_PwrMgr.h"
 #include "ZDApp.h"
@@ -5,12 +9,25 @@
 #include "hal_key.h"
 #include "zcl_app.h"
 
+/*********************************************************************
+ * LOCAL FUNCTIONS PROTOTYPES
+ *********************************************************************/
+
 static void zclCommissioning_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbCommissioningModeMsg);
 static void zclCommissioning_ResetBackoffRetry(void);
 static void zclCommissioning_BindNotification(bdbBindNotificationData_t *data);
+static void zclCommissioning_OnConnect(void);
+
+/*********************************************************************
+ * EXTERNAL VARIABLES
+ *********************************************************************/
+
 extern bool requestNewTrustCenterLinkKey;
 extern bool zclApp_onNet = 0;
 
+/*********************************************************************
+ * GLOBAL VARIABLES
+ *********************************************************************/
 
 byte rejoinsLeft = APP_COMMISSIONING_END_DEVICE_REJOIN_TRIES;
 uint32 rejoinDelay = APP_COMMISSIONING_END_DEVICE_REJOIN_START_DELAY;
@@ -18,38 +35,64 @@ uint32 rejoinDelay = APP_COMMISSIONING_END_DEVICE_REJOIN_START_DELAY;
 uint8 zclCommissioning_TaskId = 0;
 #define APP_TX_POWER TX_PWR_PLUS_4
 
-void zclCommissioning_Init(uint8 task_id) {
+/*********************************************************************
+ * @fn      zclCommissioning_Init
+ * @brief   Initialize commissioning module
+ *********************************************************************/
+
+void zclCommissioning_Init(uint8 task_id)
+{
     zclCommissioning_TaskId = task_id;
 
+    // Register callbacks
     bdb_RegisterCommissioningStatusCB(zclCommissioning_ProcessCommissioningStatus);
     bdb_RegisterBindNotificationCB(zclCommissioning_BindNotification);
 
-
+    // Set transmit power
     ZMacSetTransmitPower(APP_TX_POWER);
 
-
-    // this is important to allow connects throught routers
-    // to make this work, coordinator should be compiled with this flag #define TP2_LEGACY_ZC
+    // Important to allow connects through routers
+    // To make this work, coordinator should be compiled with this flag: #define TP2_LEGACY_ZC
     requestNewTrustCenterLinkKey = FALSE;
     
 #if APP_COMMISSIONING_BY_LONG_PRESS == FALSE
-      bdb_StartCommissioning(BDB_COMMISSIONING_MODE_NWK_STEERING | BDB_COMMISSIONING_MODE_FINDING_BINDING);
+    // Start commissioning automatically
+    bdb_StartCommissioning(BDB_COMMISSIONING_MODE_NWK_STEERING | BDB_COMMISSIONING_MODE_FINDING_BINDING);
 #else 
-      bdb_StartCommissioning(BDB_COMMISSIONING_MODE_IDDLE);
+    // Wait for long press to start commissioning
+    bdb_StartCommissioning(BDB_COMMISSIONING_MODE_IDDLE);
 #endif
 }
 
-static void zclCommissioning_ResetBackoffRetry(void) {
+/*********************************************************************
+ * @fn      zclCommissioning_ResetBackoffRetry
+ * @brief   Reset rejoin backoff parameters
+ *********************************************************************/
+
+static void zclCommissioning_ResetBackoffRetry(void)
+{
     rejoinsLeft = APP_COMMISSIONING_END_DEVICE_REJOIN_TRIES;
     rejoinDelay = APP_COMMISSIONING_END_DEVICE_REJOIN_START_DELAY;
 }
 
-static void zclCommissioning_OnConnect(void) {
+/*********************************************************************
+ * @fn      zclCommissioning_OnConnect
+ * @brief   Handle successful network connection
+ *********************************************************************/
+
+static void zclCommissioning_OnConnect(void)
+{
     zclCommissioning_ResetBackoffRetry();
     osal_start_timerEx(zclCommissioning_TaskId, APP_COMMISSIONING_CLOCK_DOWN_POLING_RATE_EVT, 60000);
 }
 
-static void zclCommissioning_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbCommissioningModeMsg) {
+/*********************************************************************
+ * @fn      zclCommissioning_ProcessCommissioningStatus
+ * @brief   Process BDB commissioning status updates
+ *********************************************************************/
+
+static void zclCommissioning_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbCommissioningModeMsg)
+{
     switch (bdbCommissioningModeMsg->bdbCommissioningMode) {
     case BDB_COMMISSIONING_INITIALIZATION:
         switch (bdbCommissioningModeMsg->bdbCommissioningStatus) {
@@ -64,18 +107,16 @@ static void zclCommissioning_ProcessCommissioningStatus(bdbCommissioningModeMsg_
             break;
         }
         break;
+        
     case BDB_COMMISSIONING_NWK_STEERING:
         switch (bdbCommissioningModeMsg->bdbCommissioningStatus) {
         case BDB_COMMISSIONING_SUCCESS:
             zclCommissioning_OnConnect();
             HAL_TURN_OFF_LED1();
             break;
-
         default:
- 
             break;
         }
-
         break;
 
     case BDB_COMMISSIONING_PARENT_LOST:
@@ -85,7 +126,7 @@ static void zclCommissioning_ProcessCommissioningStatus(bdbCommissioningModeMsg_
             break;
 
         default:
-            // Parent not found, attempt to rejoin again after a exponential backoff delay
+            // Parent not found, attempt to rejoin again after exponential backoff delay
             if (rejoinsLeft > 0) {
                 rejoinDelay = (uint32)((float)rejoinDelay * APP_COMMISSIONING_END_DEVICE_REJOIN_BACKOFF);
                 rejoinsLeft -= 1;
@@ -98,39 +139,59 @@ static void zclCommissioning_ProcessCommissioningStatus(bdbCommissioningModeMsg_
         }
         HAL_TURN_OFF_LED1();
         break;
+        
     default:
         break;
     }
 }
 
-static void zclCommissioning_ProcessIncomingMsg(zclIncomingMsg_t *pInMsg) {
+/*********************************************************************
+ * @fn      zclCommissioning_ProcessIncomingMsg
+ * @brief   Process incoming ZCL messages
+ *********************************************************************/
+
+static void zclCommissioning_ProcessIncomingMsg(zclIncomingMsg_t *pInMsg)
+{
     if (pInMsg->attrCmd) {
         osal_mem_free(pInMsg->attrCmd);
     }
 }
 
-void zclCommissioning_Sleep(uint8 allow) {
+/*********************************************************************
+ * @fn      zclCommissioning_Sleep
+ * @brief   Configure sleep/polling behavior
+ *********************************************************************/
+
+void zclCommissioning_Sleep(uint8 allow)
+{
 #if defined(POWER_SAVING)
     if (allow) {
-        if(zclApp_Config.ComparisonPreviousData3 == true){
-        NLME_SetPollRate(6500);  
-      }else{
-        NLME_SetPollRate(0);   
-      }
+        // Enable power saving - set poll rate based on configuration
+        if (zclApp_Config.ComparisonPreviousData3 == true) {
+            NLME_SetPollRate(6500);   // Poll every 6.5 seconds
+        } else {
+            NLME_SetPollRate(0);       // Disable polling (deep sleep)
+        }
     } else {
-        NLME_SetPollRate(POLL_RATE);
+        NLME_SetPollRate(POLL_RATE);   // Normal polling rate
     }
 #endif
 }
 
-uint16 zclCommissioning_event_loop(uint8 task_id, uint16 events) {
+/*********************************************************************
+ * @fn      zclCommissioning_event_loop
+ * @brief   Commissioning event processing loop
+ *********************************************************************/
+
+uint16 zclCommissioning_event_loop(uint8 task_id, uint16 events)
+{
     if (events & SYS_EVENT_MSG) {
         afIncomingMSGPacket_t *MSGpkt;
         while ((MSGpkt = (afIncomingMSGPacket_t *)osal_msg_receive(zclCommissioning_TaskId))) {
 
             switch (MSGpkt->hdr.event) {
             case ZDO_STATE_CHANGE:
-                
+                // Network state change handled elsewhere
                 break;
 
             case ZCL_INCOMING_MSG:
@@ -145,9 +206,10 @@ uint16 zclCommissioning_event_loop(uint8 task_id, uint16 events) {
             osal_msg_deallocate((uint8 *)MSGpkt);
         }
 
-        // return unprocessed events
+        // Return unprocessed events
         return (events ^ SYS_EVENT_MSG);
     }
+    
     if (events & APP_COMMISSIONING_END_DEVICE_REJOIN_EVT) {
 #if ZG_BUILD_ENDDEVICE_TYPE
         bdb_ZedAttemptRecoverNwk();
@@ -169,44 +231,58 @@ uint16 zclCommissioning_event_loop(uint8 task_id, uint16 events) {
         sendInitReportCount = 0;
         return (events ^ APP_COMMISSIONING_BY_LONG_PRESS_EVT);
     }
+    
     if (events & APP_COMMISSIONING_OFF_EVT) {
         HAL_TURN_OFF_LED1();
-        //bdb_StartCommissioning(BDB_COMMISSIONING_MODE_IDDLE);
+        // bdb_StartCommissioning(BDB_COMMISSIONING_MODE_IDDLE);
         return (events ^ APP_COMMISSIONING_OFF_EVT);
     }
 #endif
+    
     // Discard unknown events
     return 0;
 }
 
-static void zclCommissioning_BindNotification(bdbBindNotificationData_t *data) {
+/*********************************************************************
+ * @fn      zclCommissioning_BindNotification
+ * @brief   Handle binding notifications
+ *********************************************************************/
+
+static void zclCommissioning_BindNotification(bdbBindNotificationData_t *data)
+{
     uint16 maxEntries = 0, usedEntries = 0;
     bindCapacity(&maxEntries, &usedEntries);
 }
 
-void zclCommissioning_HandleKeys(uint8 portAndAction, uint8 keyCode) {
+/*********************************************************************
+ * @fn      zclCommissioning_HandleKeys
+ * @brief   Handle key presses for commissioning
+ *********************************************************************/
+
+void zclCommissioning_HandleKeys(uint8 portAndAction, uint8 keyCode)
+{
     if (portAndAction & HAL_KEY_PRESS) {
-      
 #if ZG_BUILD_ENDDEVICE_TYPE
         if (devState == DEV_NWK_ORPHAN) {
             bdb_ZedAttemptRecoverNwk();
         }
 #endif
     }
+    
 #if APP_COMMISSIONING_BY_LONG_PRESS == TRUE 
     if (portAndAction & HAL_KEY_RELEASE) {
-      osal_stop_timerEx(zclCommissioning_TaskId, APP_COMMISSIONING_BY_LONG_PRESS_EVT);
+        // Cancel long press timer on key release
+        osal_stop_timerEx(zclCommissioning_TaskId, APP_COMMISSIONING_BY_LONG_PRESS_EVT);
     } else {
-       
-      bool statTimer = true;
+        bool statTimer = true;
 #if APP_COMMISSIONING_BY_LONG_PRESS_PORT
-      statTimer = APP_COMMISSIONING_BY_LONG_PRESS_PORT & portAndAction;
+        statTimer = APP_COMMISSIONING_BY_LONG_PRESS_PORT & portAndAction;
 #endif
-      if (statTimer && bdbAttributes.bdbNodeIsOnANetwork == 0) {
-        
-         uint32 timeout = APP_COMMISSIONING_HOLD_TIME_FAST;
-         osal_start_timerEx(zclCommissioning_TaskId, APP_COMMISSIONING_BY_LONG_PRESS_EVT, timeout);
-      }
+        // Start long press timer if not on network
+        if (statTimer && bdbAttributes.bdbNodeIsOnANetwork == 0) {
+            uint32 timeout = APP_COMMISSIONING_HOLD_TIME_FAST;
+            osal_start_timerEx(zclCommissioning_TaskId, APP_COMMISSIONING_BY_LONG_PRESS_EVT, timeout);
+        }
     }
 #endif    
 }

@@ -1,11 +1,19 @@
 #ifndef _DEBUG_H
 #define _DEBUG_H
 
+/*********************************************************************
+ * INCLUDES
+ *********************************************************************/
+
 #include "hal_types.h"
 #include "hal_uart.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+
+/*********************************************************************
+ * CONSTANTS
+ *********************************************************************/
 
 #define BUFFLEN 128
 #define BUFFER 100
@@ -19,7 +27,11 @@
 
 #define PRINT_IMMEDIATE_PRINT 0
 
+/*********************************************************************
+ * MACROS
+ *********************************************************************/
 
+// Macro to print a byte in binary format
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
 #define BYTE_TO_BINARY(byte)  \
   (byte & 0x80 ? '1' : '0'), \
@@ -31,10 +43,19 @@
   (byte & 0x02 ? '1' : '0'), \
   (byte & 0x01 ? '1' : '0')
 
+/*********************************************************************
+ * EXTERNAL VARIABLES
+ *********************************************************************/
+
 extern halUARTCfg_t halUARTConfig;
+
+/*********************************************************************
+ * FUNCTION PROTOTYPES
+ *********************************************************************/
 
 void vprint(const char *fmt, va_list argp);
 extern bool DebugInit(void);
 extern void LREP(char *format, ...);
 extern void LREPMaster(uint8 *data);
-#endif
+
+#endif /* _DEBUG_H */

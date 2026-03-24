@@ -1,5 +1,5 @@
 /**************************************************************************************************
- *                                            INCLUDES
+ * INCLUDES
  **************************************************************************************************/
 #include "hal_key.h"
 //#include "Debug.h"
@@ -15,7 +15,7 @@
 #include "osal.h"
 
 /**************************************************************************************************
- *                                              MACROS
+ * MACROS
  **************************************************************************************************/
 
 #ifndef HAL_KEY_P0_INPUT_PINS
@@ -30,7 +30,6 @@
   #define HAL_KEY_P2_INPUT_PINS 0x00
 #endif
 
-
 #ifndef HAL_KEY_P0_INPUT_PINS_EDGE
   #define HAL_KEY_P0_INPUT_PINS_EDGE HAL_KEY_FALLING_EDGE
 #endif
@@ -42,8 +41,9 @@
 #ifndef HAL_KEY_P2_INPUT_PINS_EDGE
   #define HAL_KEY_P2_INPUT_PINS_EDGE HAL_KEY_FALLING_EDGE
 #endif
+
 /**************************************************************************************************
- *                                            CONSTANTS
+ * CONSTANTS
  **************************************************************************************************/
 
 uint8 portNum = 0;
@@ -56,36 +56,40 @@ uint8 pinNum = 0;
 #define HAL_KEY_P2_EDGE_BITS HAL_KEY_BIT3
 
 /**************************************************************************************************
- *                                            TYPEDEFS
- **************************************************************************************************/
-
-/**************************************************************************************************
- *                                        GLOBAL VARIABLES
+ * GLOBAL VARIABLES
  **************************************************************************************************/
 bool Hal_KeyIntEnable;
+
 /**************************************************************************************************
- *                                        FUNCTIONS - Local
+ * LOCAL FUNCTIONS PROTOTYPES
  **************************************************************************************************/
 void halProcessKeyInterrupt(uint8 portNum);
 
-void HalKeyPoll(void) {
+/**************************************************************************************************
+ * @fn      HalKeyPoll
+ * @brief   Poll key status and send key event
+ **************************************************************************************************/
+
+void HalKeyPoll(void)
+{
     uint8 pinStatus = 0;
     bool isPressed = false;
+    
     switch (portNum) {
     case HAL_KEY_PORT0:
-        PICTL ^= HAL_KEY_P0_EDGE_BITS; // flip edge bit
+        PICTL ^= HAL_KEY_P0_EDGE_BITS; // Flip edge bit
         pinStatus = P0 & pinNum;
         isPressed = HAL_KEY_P0_INPUT_PINS_EDGE != !!(pinStatus);
         break;
 
     case HAL_KEY_PORT1:
-        PICTL ^= HAL_KEY_P1_EDGE_BITS; // flip edge bit
+        PICTL ^= HAL_KEY_P1_EDGE_BITS; // Flip edge bit
         pinStatus = P1 & pinNum;
         isPressed = HAL_KEY_P1_INPUT_PINS_EDGE != !!(pinStatus);
         break;
 
     case HAL_KEY_PORT2:
-        PICTL ^= HAL_KEY_P2_EDGE_BITS; // flip edge bit
+        PICTL ^= HAL_KEY_P2_EDGE_BITS; // Flip edge bit
         pinStatus = P2 & pinNum;
         isPressed = HAL_KEY_P2_INPUT_PINS_EDGE != !!(pinStatus);
         break;
@@ -93,13 +97,17 @@ void HalKeyPoll(void) {
     default:
         break;
     }
-    //LREP("portNum=0x%X pinNum=0x%X isPressed=%d\r\n", portNum, pinNum, isPressed);
 
-    // LREP("pinStatus=" BYTE_TO_BINARY_PATTERN "\r\n", BYTE_TO_BINARY(pinStatus));
     OnBoard_SendKeys(pinNum, (isPressed ? HAL_KEY_PRESS : HAL_KEY_RELEASE) | portNum);
 }
 
-void HalKeyInit(void) {
+/**************************************************************************************************
+ * @fn      HalKeyInit
+ * @brief   Initialize key input pins
+ **************************************************************************************************/
+
+void HalKeyInit(void)
+{
 #if HAL_KEY_P0_INPUT_PINS
     P0SEL &= ~HAL_KEY_P0_INPUT_PINS;
     P0DIR &= ~(HAL_KEY_P0_INPUT_PINS);
@@ -114,64 +122,75 @@ void HalKeyInit(void) {
     P2SEL &= ~HAL_KEY_P2_INPUT_PINS;
     P2DIR &= ~(HAL_KEY_P2_INPUT_PINS);
 #endif
-
 }
 
-void HalKeyConfig(bool interruptEnable, halKeyCBack_t cback) {
+/**************************************************************************************************
+ * @fn      HalKeyConfig
+ * @brief   Configure key interrupts
+ **************************************************************************************************/
+
+void HalKeyConfig(bool interruptEnable, halKeyCBack_t cback)
+{
     Hal_KeyIntEnable = true;
 
 #if HAL_KEY_P0_INPUT_PINS
     P0IEN |= HAL_KEY_P0_INPUT_PINS;
-    IEN1 |= HAL_KEY_BIT5;            // enable port0 int
-    P0INP &= ~HAL_KEY_P0_INPUT_PINS; // Pullup/pulldown
+    IEN1 |= HAL_KEY_BIT5;            // Enable port0 interrupt
+    P0INP &= ~HAL_KEY_P0_INPUT_PINS; // Pull-up/pull-down input
 
 #if (HAL_KEY_P0_INPUT_PINS_EDGE == HAL_KEY_FALLING_EDGE)
-    P2INP &= ~HAL_KEY_BIT5; // pull up
+    P2INP &= ~HAL_KEY_BIT5; // Pull up
     MicroWait(50);
-    PICTL |= HAL_KEY_P0_EDGE_BITS; // set falling edge on port
+    PICTL |= HAL_KEY_P0_EDGE_BITS; // Set falling edge on port
 #else
-    P2INP |= HAL_KEY_BIT5; // pull down
+    P2INP |= HAL_KEY_BIT5; // Pull down
     MicroWait(50);
     PICTL &= ~(HAL_KEY_P0_EDGE_BITS);
 #endif
-
 #endif
 
 #if HAL_KEY_P1_INPUT_PINS
     P1IEN |= HAL_KEY_P1_INPUT_PINS;
-    IEN2 |= HAL_KEY_BIT4; // enable port1 int
-    P1INP &= ~HAL_KEY_P1_INPUT_PINS; //Pullup/pulldown 
+    IEN2 |= HAL_KEY_BIT4; // Enable port1 interrupt
+    P1INP &= ~HAL_KEY_P1_INPUT_PINS; // Pull-up/pull-down input
+
 #if (HAL_KEY_P1_INPUT_PINS_EDGE == HAL_KEY_FALLING_EDGE)
-    P2INP &= ~HAL_KEY_BIT6;        // pull up
+    P2INP &= ~HAL_KEY_BIT6; // Pull up
     MicroWait(50);
-    PICTL |= HAL_KEY_P1_EDGE_BITS; // set falling edge on port
+    PICTL |= HAL_KEY_P1_EDGE_BITS; // Set falling edge on port
 #else
-    P2INP |= HAL_KEY_BIT6; // pull down
+    P2INP |= HAL_KEY_BIT6; // Pull down
     MicroWait(50);
     PICTL &= ~HAL_KEY_P1_EDGE_BITS;
 #endif
-
 #endif
 
 #if HAL_KEY_P2_INPUT_PINS
     P2IEN |= HAL_KEY_P2_INPUT_PINS;
-    IEN2 |= HAL_KEY_BIT1; // enable port2 int
-    P2INP &= ~HAL_KEY_P2_INPUT_PINS; //Pullup/pulldown
+    IEN2 |= HAL_KEY_BIT1; // Enable port2 interrupt
+    P2INP &= ~HAL_KEY_P2_INPUT_PINS; // Pull-up/pull-down input
+
 #if (HAL_KEY_P2_INPUT_PINS_EDGE == HAL_KEY_FALLING_EDGE)
-    P2INP &= ~HAL_KEY_BIT7;        // pull up
+    P2INP &= ~HAL_KEY_BIT7; // Pull up
     MicroWait(50);
-    PICTL |= HAL_KEY_P2_EDGE_BITS; // set falling edge on port
+    PICTL |= HAL_KEY_P2_EDGE_BITS; // Set falling edge on port
 #else
-    P2INP |= HAL_KEY_BIT7; // pull down
+    P2INP |= HAL_KEY_BIT7; // Pull down
     MicroWait(50);
     PICTL &= ~HAL_KEY_P2_EDGE_BITS;
 #endif
-
 #endif
 }
 
-void halProcessKeyInterrupt(uint8 _portNum) {
+/**************************************************************************************************
+ * @fn      halProcessKeyInterrupt
+ * @brief   Process key interrupt and schedule key poll
+ **************************************************************************************************/
+
+void halProcessKeyInterrupt(uint8 _portNum)
+{
     portNum = _portNum;
+    
     switch (_portNum) {
     case HAL_KEY_PORT0:
         pinNum = P0IFG & HAL_KEY_P0_INPUT_PINS;
@@ -184,18 +203,27 @@ void halProcessKeyInterrupt(uint8 _portNum) {
     case HAL_KEY_PORT2:
         pinNum = P2IFG & HAL_KEY_P2_INPUT_PINS;
         break;
+        
     default:
         break;
     }
+    
     osal_start_timerEx(Hal_TaskID, HAL_KEY_EVENT, HAL_KEY_DEBOUNCE_VALUE);
 }
 
-void HalKeyEnterSleep(void) {
+/**************************************************************************************************
+ * @fn      HalKeyEnterSleep
+ * @brief   Prepare for sleep mode
+ **************************************************************************************************/
+
+void HalKeyEnterSleep(void)
+{
     uint8 clkcmd = CLKCONCMD;
     uint8 clksta = CLKCONSTA;
+    
     // Switch to 16MHz before setting the DC/DC to bypass to reduce risk of flash corruption
     CLKCONCMD = (CLKCONCMD_16MHZ | OSC_32KHZ);
-    // wait till clock speed stablizes
+    // Wait until clock speed stabilizes
     while (CLKCONSTA != (CLKCONCMD_16MHZ | OSC_32KHZ))
         ;
 
@@ -204,29 +232,41 @@ void HalKeyEnterSleep(void) {
         ;
 }
 
-uint8 HalKeyExitSleep(void) {
+/**************************************************************************************************
+ * @fn      HalKeyExitSleep
+ * @brief   Exit sleep mode and read keys
+ **************************************************************************************************/
+
+uint8 HalKeyExitSleep(void)
+{
     uint8 clkcmd = CLKCONCMD;
+    
     // Switch to 16MHz before setting the DC/DC to on to reduce risk of flash corruption
     CLKCONCMD = (CLKCONCMD_16MHZ | OSC_32KHZ);
-    // wait till clock speed stablizes
+    // Wait until clock speed stabilizes
     while (CLKCONSTA != (CLKCONCMD_16MHZ | OSC_32KHZ))
         ;
 
     CLKCONCMD = clkcmd;
 
-    // /* Wake up and read keys */
+    /* Wake up and read keys */
     return (HalKeyRead());
 }
 
+/**************************************************************************************************
+ * INTERRUPT SERVICE ROUTINES
+ **************************************************************************************************/
+
 #if HAL_KEY_P0_INPUT_PINS
-HAL_ISR_FUNCTION(halKeyPort0Isr, P0INT_VECTOR) {
+HAL_ISR_FUNCTION(halKeyPort0Isr, P0INT_VECTOR)
+{
     HAL_ENTER_ISR();
 
     if (P0IFG & HAL_KEY_P0_INPUT_PINS) {
         halProcessKeyInterrupt(HAL_KEY_PORT0);
     }
 
-    P0IFG = 0; //&= ~HAL_KEY_P0_INPUT_PINS;
+    P0IFG = 0;
     P0IF = 0;
 
     CLEAR_SLEEP_MODE();
@@ -235,14 +275,15 @@ HAL_ISR_FUNCTION(halKeyPort0Isr, P0INT_VECTOR) {
 #endif
 
 #if HAL_KEY_P1_INPUT_PINS
-HAL_ISR_FUNCTION(halKeyPort1Isr, P1INT_VECTOR) {
+HAL_ISR_FUNCTION(halKeyPort1Isr, P1INT_VECTOR)
+{
     HAL_ENTER_ISR();
 
     if (P1IFG & HAL_KEY_P1_INPUT_PINS) {
         halProcessKeyInterrupt(HAL_KEY_PORT1);
     }
 
-    P1IFG = 0; //&= ~HAL_KEY_P1_INPUT_PINS;
+    P1IFG = 0;
     P1IF = 0;
 
     CLEAR_SLEEP_MODE();
@@ -251,14 +292,15 @@ HAL_ISR_FUNCTION(halKeyPort1Isr, P1INT_VECTOR) {
 #endif
 
 #if HAL_KEY_P2_INPUT_PINS
-HAL_ISR_FUNCTION(halKeyPort2Isr, P2INT_VECTOR) {
+HAL_ISR_FUNCTION(halKeyPort2Isr, P2INT_VECTOR)
+{
     HAL_ENTER_ISR();
 
     if (P2IFG & HAL_KEY_P2_INPUT_PINS) {
         halProcessKeyInterrupt(HAL_KEY_PORT2);
     }
 
-    P2IFG = 0; //&= ~HAL_KEY_P2_INPUT_PINS;
+    P2IFG = 0;
     P2IF = 0;
 
     CLEAR_SLEEP_MODE();
@@ -266,8 +308,12 @@ HAL_ISR_FUNCTION(halKeyPort2Isr, P2INT_VECTOR) {
 }
 #endif
 
+/**************************************************************************************************
+ * @fn      HalKeyRead
+ * @brief   Read key status (stub implementation)
+ **************************************************************************************************/
 
-
-uint8 HalKeyRead ( void ){
+uint8 HalKeyRead(void)
+{
     return 0;
 }

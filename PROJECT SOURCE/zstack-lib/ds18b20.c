@@ -1,36 +1,56 @@
+/*********************************************************************
+ * INCLUDES
+ *********************************************************************/
+
 #include "ds18b20.h"
 #include "OnBoard.h"
 #include "delay.h"
 
-#define DS18B20_SKIP_ROM 0xCC
-#define DS18B20_CONVERT_T 0x44
-#define DS18B20_READ_SCRATCHPAD 0xBE
-#define DS18B20_WRITE_SCRATCHPAD 0x4E
+/*********************************************************************
+ * CONSTANTS
+ *********************************************************************/
+
+// DS18B20 Commands
+#define DS18B20_SKIP_ROM          0xCC
+#define DS18B20_CONVERT_T         0x44
+#define DS18B20_READ_SCRATCHPAD   0xBE
+#define DS18B20_WRITE_SCRATCHPAD  0x4E
 #define DS18B20_COPY_SCRATCHPAD   0x48
 
-#define DS18B20_TEMP_9_BIT 0x1F  //  9 bit
-#define DS18B20_TEMP_10_BIT 0x3F // 10 bit
-#define DS18B20_TEMP_11_BIT 0x5F // 11 bit
-#define DS18B20_TEMP_12_BIT 0x7F // 12 bit
+// Resolution settings
+#define DS18B20_TEMP_9_BIT        0x1F   // 9-bit resolution
+#define DS18B20_TEMP_10_BIT       0x3F   // 10-bit resolution
+#define DS18B20_TEMP_11_BIT       0x5F   // 11-bit resolution
+#define DS18B20_TEMP_12_BIT       0x7F   // 12-bit resolution
 
+// Default configuration
 #ifndef DS18B20_RESOLUTION
-#define DS18B20_RESOLUTION DS18B20_TEMP_12_BIT
+#define DS18B20_RESOLUTION        DS18B20_TEMP_12_BIT
 #endif
 
 #ifndef DS18B20_RETRY_COUNT
-#define DS18B20_RETRY_COUNT 10
+#define DS18B20_RETRY_COUNT       10
 #endif
 
-#define MAX_CONVERSION_TIME 900 // 750ms * 1.2
+// Maximum conversion time for 12-bit resolution (750ms * 1.2 margin)
+#define MAX_CONVERSION_TIME        900
 
-#define DS18B20_RETRY_DELAY ((uint16) (MAX_CONVERSION_TIME / DS18B20_RETRY_COUNT))
+#define DS18B20_RETRY_DELAY        ((uint16)(MAX_CONVERSION_TIME / DS18B20_RETRY_COUNT))
 
-// Scale factor: 100 for 2 decimal places (temperature * 100)
-#define TEMP_SCALE 100
+// Temperature scaling: multiply by 100 for 2 decimal places
+#define TEMP_SCALE                 100
 // Error temperature: 150.00°C * 100 = 15000
-#define ERROR_TEMP_SCALED 15000
+#define ERROR_TEMP_SCALED          15000
+
+/*********************************************************************
+ * LOCAL VARIABLES
+ *********************************************************************/
 
 static uint8 ds18b20_current_resolution = DS18B20_RESOLUTION;
+
+/*********************************************************************
+ * LOCAL FUNCTIONS PROTOTYPES
+ *********************************************************************/
 
 static void ds18b20_send(uint8 bit);
 static uint8 ds18b20_read(void);
@@ -40,7 +60,13 @@ static uint8 ds18b20_Reset(void);
 static void ds18b20_GroudPins(void);
 static uint8 ds18b20_crc8(const uint8 *data, uint8 len);
 
-static uint8 ds18b20_crc8(const uint8 *data, uint8 len) {
+/*********************************************************************
+ * @fn      ds18b20_crc8
+ * @brief   Calculate 8-bit CRC for DS18B20 data
+ *********************************************************************/
+
+static uint8 ds18b20_crc8(const uint8 *data, uint8 len)
+{
     uint8 crc = 0;
     uint8 i, j;
     
@@ -58,7 +84,13 @@ static uint8 ds18b20_crc8(const uint8 *data, uint8 len) {
     return crc;
 }
 
-static void ds18b20_send(uint8 bit) {
+/*********************************************************************
+ * @fn      ds18b20_send
+ * @brief   Send a single bit on the 1-Wire bus
+ *********************************************************************/
+
+static void ds18b20_send(uint8 bit)
+{
     ONEWIRE2_SBIT = 1;
     ONEWIRE2_DIR |= ONEWIRE2_BV;
     ONEWIRE2_SBIT = 0;
@@ -78,7 +110,13 @@ static void ds18b20_send(uint8 bit) {
     delay_us(2);
 }
 
-static uint8 ds18b20_read(void) {
+/*********************************************************************
+ * @fn      ds18b20_read
+ * @brief   Read a single bit from the 1-Wire bus
+ *********************************************************************/
+
+static uint8 ds18b20_read(void)
+{
     uint8 bit_value;
     
     ONEWIRE2_SBIT = 1;
@@ -95,7 +133,13 @@ static uint8 ds18b20_read(void) {
     return bit_value;
 }
 
-static void ds18b20_send_byte(uint8 data) {
+/*********************************************************************
+ * @fn      ds18b20_send_byte
+ * @brief   Send a byte on the 1-Wire bus
+ *********************************************************************/
+
+static void ds18b20_send_byte(uint8 data)
+{
     uint8 i;
     for (i = 0; i < 8; i++) {
         ds18b20_send(data & 0x01);
@@ -103,7 +147,13 @@ static void ds18b20_send_byte(uint8 data) {
     }
 }
 
-static uint8 ds18b20_read_byte(void) {
+/*********************************************************************
+ * @fn      ds18b20_read_byte
+ * @brief   Read a byte from the 1-Wire bus
+ *********************************************************************/
+
+static uint8 ds18b20_read_byte(void)
+{
     uint8 i;
     uint8 data = 0;
     
@@ -116,7 +166,14 @@ static uint8 ds18b20_read_byte(void) {
     return data;
 }
 
-static uint8 ds18b20_Reset(void) {
+/*********************************************************************
+ * @fn      ds18b20_Reset
+ * @brief   Send reset pulse and check for presence
+ * @return  1 if device present, 0 otherwise
+ *********************************************************************/
+
+static uint8 ds18b20_Reset(void)
+{
     uint8 presence;
     
     ONEWIRE2_DIR |= ONEWIRE2_BV;
@@ -135,13 +192,25 @@ static uint8 ds18b20_Reset(void) {
     return (presence == 0);
 }
 
-static void ds18b20_GroudPins(void) {
+/*********************************************************************
+ * @fn      ds18b20_GroudPins
+ * @brief   Release the 1-Wire bus
+ *********************************************************************/
+
+static void ds18b20_GroudPins(void)
+{
     ONEWIRE2_DIR &= ~ONEWIRE2_BV;
     ONEWIRE2_SBIT = 1;
 }
 
+/*********************************************************************
+ * @fn      ds18b20_set_resolution
+ * @brief   Set DS18B20 measurement resolution
+ * @param   resolution - DS18B20_TEMP_9_BIT through DS18B20_TEMP_12_BIT
+ *********************************************************************/
 
-void ds18b20_set_resolution(uint8 resolution) {
+void ds18b20_set_resolution(uint8 resolution)
+{
     if (resolution == ds18b20_current_resolution) {
         return;
     }
@@ -159,11 +228,10 @@ void ds18b20_set_resolution(uint8 resolution) {
     }
     
     ds18b20_send_byte(DS18B20_SKIP_ROM);
-    
     ds18b20_send_byte(DS18B20_WRITE_SCRATCHPAD);
     
-    ds18b20_send_byte(0x00); 
-    ds18b20_send_byte(0x00);
+    ds18b20_send_byte(0x00);  // TH register (unused)
+    ds18b20_send_byte(0x00);  // TL register (unused)
     ds18b20_send_byte(resolution);
     
     ds18b20_Reset();
@@ -182,10 +250,13 @@ void ds18b20_set_resolution(uint8 resolution) {
     ds18b20_GroudPins();
 }
 
+/*********************************************************************
+ * @fn      reqTemperature
+ * @brief   Start temperature conversion on all DS18B20 devices
+ *********************************************************************/
 
-
-void reqTemperature(void) {
-    
+void reqTemperature(void)
+{
     if (ds18b20_Reset()) {
         ds18b20_send_byte(DS18B20_SKIP_ROM);
         ds18b20_send_byte(DS18B20_CONVERT_T);
@@ -193,9 +264,14 @@ void reqTemperature(void) {
     ds18b20_GroudPins();
 }
 
-// Integer version: returns temperature * 100 (for 2 decimal places)
-// Example: 25.32°C = 2532
-int16 readTemperature(void) {
+/*********************************************************************
+ * @fn      readTemperature
+ * @brief   Read temperature from DS18B20
+ * @return  Temperature * 100 (e.g., 2532 = 25.32°C)
+ *********************************************************************/
+
+int16 readTemperature(void)
+{
     uint8 temppp1, temp2, retry_count = DS18B20_RETRY_COUNT;
     uint8 scratchpad[9];
     int16 raw_temp;
@@ -232,7 +308,7 @@ int16 readTemperature(void) {
             return ERROR_TEMP_SCALED;
         }
         
-        // Check for 85°C value (0x0550)
+        // Check for 85°C value (0x0550) - power-on reset default
         if (temppp1 == 0x50 && temp2 == 0x05) {
             retry_count--;
             delay_ms(50);
@@ -246,7 +322,7 @@ int16 readTemperature(void) {
             continue;
         }
         
-        // Check for 25.0625°C value (0x0190)
+        // Check for 25.0625°C value (0x0190) - often indicates no device
         if (temppp1 == 0x90 && temp2 == 0x01) {
             consecutive_25c_count++;
             
@@ -265,9 +341,8 @@ int16 readTemperature(void) {
         // Form raw temperature value
         raw_temp = (temp2 << 8) | temppp1;
         
-        // Handle negative temperatures
-        if (temp2 & 0xF8) { // If high bits set (negative temperature)
-            // Two's complement conversion
+        // Handle negative temperatures (two's complement)
+        if (temp2 & 0xF8) {
             raw_temp = ~raw_temp + 1;
             raw_temp = -raw_temp;
         }
@@ -292,7 +367,14 @@ int16 readTemperature(void) {
     return ERROR_TEMP_SCALED;
 }
 
-uint8 ds18b20_check_presence(void) {
+/*********************************************************************
+ * @fn      ds18b20_check_presence
+ * @brief   Check if DS18B20 is present on the bus
+ * @return  1 if device present, 0 otherwise
+ *********************************************************************/
+
+uint8 ds18b20_check_presence(void)
+{
     uint8 present = ds18b20_Reset();
     ds18b20_GroudPins();
     return present;
